@@ -17,20 +17,33 @@ public class Immortal extends Thread {
 
     private final Random r = new Random(System.currentTimeMillis());
 
+    private Semaforo semaforo;
 
-    public Immortal(String name, List<Immortal> immortalsPopulation, int health, int defaultDamageValue, ImmortalUpdateReportCallback ucb) {
+
+    public Immortal(String name, List<Immortal> immortalsPopulation, int health, int defaultDamageValue, ImmortalUpdateReportCallback ucb ,Semaforo semaforo) {
         super(name);
         this.updateCallback=ucb;
         this.name = name;
         this.immortalsPopulation = immortalsPopulation;
         this.health = health;
         this.defaultDamageValue=defaultDamageValue;
+        this.semaforo = semaforo;
     }
 
     public void run() {
 
         while (true) {
             Immortal im;
+
+            if(!semaforo.getBandera()){
+                synchronized(semaforo){
+                    try {
+                        semaforo.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
 
             int myIndex = immortalsPopulation.indexOf(this);
 
