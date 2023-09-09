@@ -20,10 +20,12 @@ public class Immortal extends Thread {
 
     private Semaforo semaforo;
 
+    private Semaforo semaforoStop;
+
     private boolean estoyVivo;
 
 
-    public Immortal(String name, List<Immortal> immortalsPopulation, int health, int defaultDamageValue, ImmortalUpdateReportCallback ucb ,Semaforo semaforo) {
+    public Immortal(String name, List<Immortal> immortalsPopulation, int health, int defaultDamageValue, ImmortalUpdateReportCallback ucb ,Semaforo semaforo, Semaforo semaforoStop) {
         super(name);
         this.updateCallback=ucb;
         this.name = name;
@@ -31,12 +33,14 @@ public class Immortal extends Thread {
         this.health = new AtomicInteger(health);
         this.defaultDamageValue=defaultDamageValue;
         this.semaforo = semaforo;
+        this.semaforoStop = semaforoStop;
         estoyVivo = true;
     }
 
     public void run() {
 
-        while (estoyVivo) {
+        while (estoyVivo && semaforoStop.getBandera())  {
+           
             Immortal im;
 
             if(!semaforo.getBandera()){
