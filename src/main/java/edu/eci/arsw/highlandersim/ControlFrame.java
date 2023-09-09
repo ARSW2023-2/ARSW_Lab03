@@ -36,6 +36,8 @@ public class ControlFrame extends JFrame {
     private JScrollPane scrollPane;
     private JTextField numOfImmortals;
 
+    private Semaforo semaforo;
+    private Semaforo semaforoStop;
     /**
      * Launch the application.
      */
@@ -56,6 +58,8 @@ public class ControlFrame extends JFrame {
      * Create the frame.
      */
     public ControlFrame() {
+        semaforo = new Semaforo();
+        semaforoStop = new Semaforo();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(100, 100, 647, 248);
         contentPane = new JPanel();
@@ -69,6 +73,9 @@ public class ControlFrame extends JFrame {
         final JButton btnStart = new JButton("Start");
         btnStart.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+
+                // Se inicia el semaforo en estado true, para que el programa inicie los hilos al dar start
+                semaforo.setBandera(true);
 
                 immortals = setupInmortals();
 
@@ -87,10 +94,16 @@ public class ControlFrame extends JFrame {
         JButton btnPauseAndCheck = new JButton("Pause and check");
         btnPauseAndCheck.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                // Se cambia el estado de la bandera a falso, para que los hilos no puedan acceder a la seccion critica
+                semaforo.setBandera(false);
+                
+                try{
+                    // se espera 10 milisegundos para que sumar la vida de los inmortales
+                    Thread.sleep(10);
+                }catch(InterruptedException ex){
+                    ex.printStackTrace();
+                }
 
-                /*
-				 * COMPLETAR
-                 */
                 int sum = 0;
                 for (Immortal im : immortals) {
                     sum += im.getHealth();
@@ -108,10 +121,20 @@ public class ControlFrame extends JFrame {
 
         btnResume.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                /**
-                 * IMPLEMENTAR
-                 */
+                // se accede al monitor de semaforo sincronizando lo hilos, se cambia el estado de la bandera a true 
+                synchronized(semaforo){
+                    semaforo.setBandera(true);
+                    // Se despiertan todos los hilos 
+                    semaforo.notifyAll();
+                }
 
+                
+                /*try{
+                    // se espera 10 milisegundos para que sumar la vida de los inmortales
+                    Thread.sleep(10);
+                }catch(InterruptedException e1){
+                    e1.printStackTrace();
+                }*/
             }
         });
 
@@ -128,6 +151,12 @@ public class ControlFrame extends JFrame {
         JButton btnStop = new JButton("STOP");
         btnStop.setForeground(Color.RED);
         toolBar.add(btnStop);
+        btnStop.addActionListener(new ActionListener() {
+            public void actionPerformed (ActionEvent e){
+                semaforoStop.setBandera(false);
+            }
+            
+        });
 
         scrollPane = new JScrollPane();
         contentPane.add(scrollPane, BorderLayout.CENTER);
@@ -150,9 +179,10 @@ public class ControlFrame extends JFrame {
             int ni = Integer.parseInt(numOfImmortals.getText());
 
             List<Immortal> il = new LinkedList<Immortal>();
+            semaforoStop.setBandera(true);
 
             for (int i = 0; i < ni; i++) {
-                Immortal i1 = new Immortal("im" + i, il, DEFAULT_IMMORTAL_HEALTH, DEFAULT_DAMAGE_VALUE,ucb);
+                Immortal i1 = new Immortal("im" + i, il, DEFAULT_IMMORTAL_HEALTH, DEFAULT_DAMAGE_VALUE,ucb,semaforo,semaforoStop);
                 il.add(i1);
             }
             return il;
