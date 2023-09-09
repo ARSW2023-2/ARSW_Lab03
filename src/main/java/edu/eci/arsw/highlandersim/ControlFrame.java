@@ -119,16 +119,20 @@ public class ControlFrame extends JFrame {
 
         btnResume.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                // Se cambia el estado de la bandera a falso, para que los hilos no puedan acceder a la seccion critica
-                semaforo.setBandera(false);
+                // se accede al monitor de semaforo sincronizando lo hilos, se cambia el estado de la bandera a true 
+                synchronized(semaforo){
+                    semaforo.setBandera(true);
+                    // Se despiertan todos los hilos 
+                    semaforo.notifyAll();
+                }
+
                 
-                try{
+                /*try{
                     // se espera 10 milisegundos para que sumar la vida de los inmortales
                     Thread.sleep(10);
                 }catch(InterruptedException e1){
                     e1.printStackTrace();
-                }
-
+                }*/
             }
         });
 
